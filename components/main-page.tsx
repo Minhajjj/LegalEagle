@@ -1,13 +1,41 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Upload, Shield, Zap, Lock } from "lucide-react";
+import { useState, useCallback, useRef } from "react"; // Added useRef
+import { Upload, Shield, Zap, Lock, Loader2 } from "lucide-react"; // Added Loader2 for loading icon
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { processDocument } from "@/app/dashboard/action"; // Import your server action
+import { useRouter } from "next/navigation";
 
 export function MainPage() {
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false); // New state for loading
+  const fileInputRef = useRef<HTMLInputElement>(null); // Ref to trigger file browser
+  const router = useRouter();
+
+  // The core upload function
+  const onUpload = async (file: File) => {
+    if (!file) return;
+    
+    try {
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const result = await processDocument(formData);
+
+      if (result.success) {
+        // Redirect to the forensics page once the AI is done chunking
+        router.push(`/dashboard/documents/${result.documentId}`);
+      }
+    } catch (error) {
+      console.error("Forensic analysis failed:", error);
+      alert("There was an error analyzing the document. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -25,7 +53,7 @@ export function MainPage() {
     setIsDragging(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      console.log("File dropped:", e.dataTransfer.files[0]);
+      onUpload(e.dataTransfer.files[0]); // Trigger the AI pipeline
     }
   }, []);
 
@@ -50,6 +78,7 @@ export function MainPage() {
           onDrop={handleDrop}
           className={`
             relative border-2 border-dashed rounded-2xl p-16 text-center transition-all
+            ${isUploading ? "opacity-60 cursor-not-allowed" : ""} 
             ${
               isDragging
                 ? "border-[#308970] bg-[#308970]/10"
@@ -57,18 +86,38 @@ export function MainPage() {
             }
           `}
         >
+          {/* Hidden File Input for the 'Choose File' button */}
+          <input 
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept=".pdf,.docx,.txt"
+            onChange={(e) => e.target.files?.[0] && onUpload(e.target.files[0])}
+          />
+
           <div className="flex flex-col items-center justify-center">
             <div className="mb-6">
-              <Upload className="w-16 h-16 text-[#308970]" />
+              {isUploading ? (
+                <Loader2 className="w-16 h-16 text-[#308970] animate-spin" />
+              ) : (
+                <Upload className="w-16 h-16 text-[#308970]" />
+              )}
             </div>
             <h2 className="text-2xl font-semibold text-[#1C212B] mb-3">
-              Drop your document here
+              {isUploading ? "Analyzing Document..." : "Drop your document here"}
             </h2>
             <p className="text-[#1C212B]/60 mb-6">
-              Or click to browse. Supports PDF, DOCX, and TXT files.
+              {isUploading 
+                ? "Our AI is extracting clauses and identifying risks..." 
+                : "Or click to browse. Supports PDF, DOCX, and TXT files."}
             </p>
-            <Button size="lg" className="bg-[#308970] hover:bg-[#2a7863]">
-              Choose File
+            <Button 
+              size="lg" 
+              className="bg-[#308970] hover:bg-[#2a7863]"
+              disabled={isUploading}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {isUploading ? "Processing..." : "Choose File"}
             </Button>
           </div>
         </div>
