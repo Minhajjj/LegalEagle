@@ -35,13 +35,16 @@ export default function Template({ children }: { children: React.ReactNode }) {
       
       {/* Brand Logo inside the loader */}
       <motion.div
-        className="fixed inset-0 z-[105] pointer-events-none flex items-center justify-center"
+        className="fixed inset-0 z-[105] pointer-events-none flex flex-col items-center justify-center"
         initial={{ opacity: 1, y: 0 }}
         animate={{ opacity: 0, y: -40 }}
         transition={{ duration: 0.6, delay: 0.15, ease: "easeIn" }}
       >
-        <span className="text-white text-5xl font-bold tracking-widest font-playfair drop-shadow-lg">
+        <span className="text-white text-6xl font-extrabold tracking-[0.2em] font-playfair drop-shadow-2xl uppercase">
           LegalEagle
+        </span>
+        <span className="text-white/70 text-sm tracking-[0.4em] uppercase mt-4 font-semibold">
+          AI Legal Forensics
         </span>
       </motion.div>
 
