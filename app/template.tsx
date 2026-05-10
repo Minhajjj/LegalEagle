@@ -17,36 +17,37 @@ export default function Template({ children }: { children: React.ReactNode }) {
       {layers.map((layer, index) => (
         <motion.div
           key={index}
-          className="fixed inset-0 pointer-events-none"
+          className="fixed inset-0 pointer-events-none flex flex-col items-center justify-center"
           style={{ 
             backgroundColor: layer.bg, 
-            zIndex: layer.z, 
-            transformOrigin: "top" 
+            zIndex: layer.z,
           }}
-          initial={{ scaleY: 1 }}
-          animate={{ scaleY: 0 }}
+          initial={{ y: "0%" }}
+          animate={{ y: "-100%" }}
           transition={{ 
             duration: 0.8, 
             ease: [0.22, 1, 0.36, 1], 
             delay: index * 0.15 
           }}
-        />
+        >
+          {/* Put the logo text ONLY inside the top-most dark layer so it never loses contrast */}
+          {index === 0 && (
+            <motion.div 
+              className="flex flex-col items-center justify-center"
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 0 }}
+              transition={{ duration: 0.4, delay: 0.3 }}
+            >
+              <span className="text-white text-6xl font-extrabold tracking-[0.2em] font-playfair drop-shadow-2xl uppercase">
+                LegalEagle
+              </span>
+              <span className="text-white/80 text-sm tracking-[0.4em] uppercase mt-4 font-semibold drop-shadow-md">
+                AI Legal Forensics
+              </span>
+            </motion.div>
+          )}
+        </motion.div>
       ))}
-      
-      {/* Brand Logo inside the loader */}
-      <motion.div
-        className="fixed inset-0 z-[105] pointer-events-none flex flex-col items-center justify-center"
-        initial={{ opacity: 1, y: 0 }}
-        animate={{ opacity: 0, y: -40 }}
-        transition={{ duration: 0.6, delay: 0.15, ease: "easeIn" }}
-      >
-        <span className="text-white text-6xl font-extrabold tracking-[0.2em] font-playfair drop-shadow-2xl uppercase">
-          LegalEagle
-        </span>
-        <span className="text-white/70 text-sm tracking-[0.4em] uppercase mt-4 font-semibold">
-          AI Legal Forensics
-        </span>
-      </motion.div>
 
       {/* The actual page content, fades in after the layers start sliding */}
       <motion.div
