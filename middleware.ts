@@ -40,13 +40,14 @@ export async function middleware(request: NextRequest) {
 
   // Define protected and auth routes
   const isDashboardRoute = request.nextUrl.pathname.startsWith("/dashboard");
+  const isCompareRoute = request.nextUrl.pathname.startsWith("/compare");
   const isLoginRoute = request.nextUrl.pathname.startsWith("/login");
   const isPublicRoute =
     request.nextUrl.pathname === "/" ||
     request.nextUrl.pathname.startsWith("/public");
 
-  // Protect dashboard routes
-  if (!user && isDashboardRoute) {
+  // Protect dashboard and compare routes
+  if (!user && (isDashboardRoute || isCompareRoute)) {
     const redirectUrl = new URL("/login", request.url);
     redirectUrl.searchParams.set("redirectTo", request.nextUrl.pathname);
     return NextResponse.redirect(redirectUrl);

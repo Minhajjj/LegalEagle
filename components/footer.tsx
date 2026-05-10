@@ -13,7 +13,7 @@ export function Footer() {
 
   return (
     <footer className="mt-auto print:hidden">
-      <div className="relative border-t-[5px]" style={{ borderTopColor: le.secondary }}>
+      <div className="relative">
         {/* Distinct from page bg (#f8fafc) and from navbar (#dbe6f3 band) */}
         <div
           className="shadow-[inset_0_2px_0_rgba(255,255,255,0.35)]"
@@ -127,7 +127,6 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="h-1 w-full" style={{ backgroundColor: le.secondary }} aria-hidden />
       </div>
     </footer>
   );
