@@ -1,13 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, MapPin, Send, Phone, MessageSquare } from "lucide-react";
+import { Mail, Send, Phone, MessageSquare } from "lucide-react";
+import gsap from "gsap";
+import { motion, AnimatePresence } from "framer-motion";
+import { le } from "@/lib/design-system";
+import { springSnappy, useAppReducedMotion } from "@/lib/motion-utils";
 
 export default function ContactPage() {
+  const reduceMotion = useAppReducedMotion();
   const [submitted, setSubmitted] = useState(false);
+  const leftRef = useRef<HTMLDivElement | null>(null);
+  const rightRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (reduceMotion) return;
+    gsap.fromTo(
+      [leftRef.current, rightRef.current].filter(Boolean),
+      { opacity: 0, y: 16 },
+      { opacity: 1, y: 0, duration: 0.55, stagger: 0.12, ease: "power2.out" },
+    );
+  }, [reduceMotion]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -15,122 +31,154 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F2F1EE] flex flex-col">
-      <main className="flex-grow py-20 px-6">
+    <div className="flex min-h-screen flex-col" style={{ backgroundColor: le.background }}>
+      <main className="flex-grow px-6 py-20">
         <div className="container mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-            {/* Left Side: Brand Info */}
-            <div className="space-y-8">
+          <div className="grid grid-cols-1 items-start gap-16 lg:grid-cols-2">
+            <div ref={leftRef} className="space-y-8">
               <div>
-                <h2 className="text-4xl font-black text-[#308970] mb-4 uppercase tracking-tighter leading-none">
-                  Contact Our <br />
-                  Legal Experts
+                <h2 className="mb-4 text-4xl font-bold leading-tight" style={{ color: le.primary }}>
+                  Contact us
                 </h2>
-                <p className="text-[#308970]/70 font-bold text-lg max-w-md">
-                  Have questions about our AI forensic analysis? Our team is
-                  here to help.
+                <p className="max-w-md text-lg font-medium" style={{ color: le.muted }}>
+                  Questions about analysis, security, or enterprise plans—we reply quickly.
                 </p>
               </div>
 
               <div className="space-y-6">
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-[#308970] rounded-xl flex items-center justify-center shrink-0">
-                    <Mail className="text-white w-6 h-6" />
+                <div className="flex items-start gap-4">
+                  <div
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[8px] text-white"
+                    style={{ backgroundColor: le.primary }}
+                  >
+                    <Mail className="h-6 w-6" />
                   </div>
                   <div>
-                    <h4 className="font-black text-[#308970] uppercase tracking-widest text-xs mb-1">
+                    <h4 className="mb-1 text-xs font-bold uppercase tracking-wider" style={{ color: le.muted }}>
                       Email
                     </h4>
-                    <p className="text-[#308970] font-bold">
+                    <p className="font-semibold" style={{ color: le.text }}>
                       support@legaleagle.ai
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-[#308970] rounded-xl flex items-center justify-center shrink-0">
-                    <Phone className="text-white w-6 h-6" />
+                <div className="flex items-start gap-4">
+                  <div
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[8px] text-white"
+                    style={{ backgroundColor: le.primary }}
+                  >
+                    <Phone className="h-6 w-6" />
                   </div>
                   <div>
-                    <h4 className="font-black text-[#308970] uppercase tracking-widest text-xs mb-1">
+                    <h4 className="mb-1 text-xs font-bold uppercase tracking-wider" style={{ color: le.muted }}>
                       Phone
                     </h4>
-                    <p className="text-[#308970] font-bold">
+                    <p className="font-semibold" style={{ color: le.text }}>
                       +1 (555) 000-EAGLE
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="pt-8 border-t border-[#308970]/20 flex items-center space-x-4 text-[#308970]/50 font-black text-xs uppercase tracking-[0.2em]">
-                <MessageSquare className="w-4 h-4" />
-                <span>Typical response: 2 hours</span>
+              <div
+                className="flex items-center gap-3 border-t border-slate-200 pt-8 text-xs font-semibold uppercase tracking-wider"
+                style={{ color: le.muted }}
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span>Typical response under 2 hours</span>
               </div>
             </div>
 
-            {/* Right Side: Form */}
-            <div className="bg-white border-2 border-[#308970]/10 rounded-[40px] p-8 md:p-12 shadow-sm">
-              {!submitted ? (
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-xs font-black text-[#308970] uppercase tracking-widest">
-                      Full Name
-                    </label>
-                    <Input
-                      placeholder="Jane Doe"
-                      className="bg-[#F2F1EE]/50 border-none rounded-xl py-6 font-bold text-[#308970]"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-black text-[#308970] uppercase tracking-widest">
-                      Email Address
-                    </label>
-                    <Input
-                      type="email"
-                      placeholder="jane@company.com"
-                      className="bg-[#F2F1EE]/50 border-none rounded-xl py-6 font-bold text-[#308970]"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-black text-[#308970] uppercase tracking-widest">
-                      Message
-                    </label>
-                    <Textarea
-                      placeholder="How can we help you today?"
-                      className="bg-[#F2F1EE]/50 border-none rounded-xl min-h-[150px] font-bold text-[#308970]"
-                      required
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full bg-[#308970] text-white py-8 rounded-2xl font-black uppercase tracking-widest hover:scale-[1.02] transition-transform flex items-center justify-center gap-3"
+            <motion.div
+              ref={rightRef}
+              className="rounded-[16px] border border-slate-200 bg-white p-8 shadow-lg md:p-12"
+              whileHover={reduceMotion ? undefined : { boxShadow: "0 20px 50px rgba(15,23,42,0.08)" }}
+              transition={{ duration: 0.25 }}
+            >
+              <AnimatePresence mode="wait">
+                {!submitted ? (
+                  <motion.form
+                    key="form"
+                    initial={reduceMotion ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onSubmit={handleSubmit}
+                    className="space-y-6"
                   >
-                    <Send className="w-5 h-5" />
-                    Send Message
-                  </Button>
-                </form>
-              ) : (
-                <div className="text-center py-20">
-                  <div className="w-20 h-20 bg-[#308970]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Send className="text-[#308970] w-10 h-10" />
-                  </div>
-                  <h3 className="text-2xl font-black text-[#308970] mb-2 uppercase">
-                    Sent!
-                  </h3>
-                  <p className="text-[#308970]/70 font-bold">
-                    We'll get back to you shortly.
-                  </p>
-                  <Button
-                    variant="ghost"
-                    onClick={() => setSubmitted(false)}
-                    className="mt-8 text-[#308970] font-black uppercase text-xs tracking-widest"
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider" style={{ color: le.muted }}>
+                        Full name
+                      </label>
+                      <Input
+                        placeholder="Jane Doe"
+                        className="h-12 rounded-[8px] border-slate-200 bg-slate-50/80"
+                        style={{ color: le.text }}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider" style={{ color: le.muted }}>
+                        Email
+                      </label>
+                      <Input
+                        type="email"
+                        placeholder="jane@company.com"
+                        className="h-12 rounded-[8px] border-slate-200 bg-slate-50/80"
+                        style={{ color: le.text }}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider" style={{ color: le.muted }}>
+                        Message
+                      </label>
+                      <Textarea
+                        placeholder="How can we help?"
+                        className="min-h-[150px] rounded-[8px] border-slate-200 bg-slate-50/80"
+                        style={{ color: le.text }}
+                        required
+                      />
+                    </div>
+                    <motion.div
+                      whileHover={reduceMotion ? undefined : { scale: 1.01 }}
+                      whileTap={reduceMotion ? undefined : { scale: 0.99 }}
+                      transition={springSnappy}
+                    >
+                      <Button type="submit" className="flex h-12 w-full items-center justify-center gap-2 rounded-[8px]">
+                        <Send className="h-5 w-5" />
+                        Send message
+                      </Button>
+                    </motion.div>
+                  </motion.form>
+                ) : (
+                  <motion.div
+                    key="done"
+                    initial={reduceMotion ? false : { opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="py-12 text-center"
                   >
-                    New Message
-                  </Button>
-                </div>
-              )}
-            </div>
+                    <div
+                      className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full"
+                      style={{ backgroundColor: `${le.success}18` }}
+                    >
+                      <Send className="h-10 w-10" style={{ color: le.success }} />
+                    </div>
+                    <h3 className="mb-2 text-2xl font-bold" style={{ color: le.text }}>
+                      Message sent
+                    </h3>
+                    <p style={{ color: le.muted }}>We&apos;ll get back to you shortly.</p>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setSubmitted(false)}
+                      className="mt-8 font-semibold"
+                      style={{ color: le.secondary }}
+                    >
+                      Send another
+                    </Button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           </div>
         </div>
       </main>

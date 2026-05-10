@@ -26,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     const supabase = createClient();
+    // DB read: pulls the signed-in user's row from `profiles`.
     const { data } = await supabase
       .from("profiles")
       .select("*")

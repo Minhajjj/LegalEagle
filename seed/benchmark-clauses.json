@@ -1,0 +1,122 @@
+[
+    {
+      "clause_type": "confidentiality",
+      "title": "Mutual Non-Disclosure and Confidentiality",
+      "standard_text": "The Receiving Party agrees to maintain the strict confidentiality of all proprietary information disclosed by the Disclosing Party. This information shall not be shared with any third party without prior written consent, except as required by law or judicial process.",
+      "jurisdiction": "general",
+      "risk_level_if_missing": "high",
+      "notes": "Essential for protecting trade secrets and sensitive business data."
+    },
+    {
+      "clause_type": "force_majeure",
+      "title": "Excusable Delay and Force Majeure",
+      "standard_text": "Neither party shall be held liable for any failure or delay in performance due to circumstances beyond their reasonable control, including but not limited to natural disasters, acts of God, war, strikes, or governmental restrictions.",
+      "jurisdiction": "general",
+      "risk_level_if_missing": "medium",
+      "notes": "Protects against unforeseen global or local catastrophic events."
+    },
+    {
+      "clause_type": "termination",
+      "title": "Termination for Convenience",
+      "standard_text": "Either party may terminate this Agreement at any time, without cause, by providing the other party with at least 30 days prior written notice. Any outstanding fees for services rendered up to the termination date shall remain payable.",
+      "jurisdiction": "general",
+      "risk_level_if_missing": "medium",
+      "notes": "Provides an 'exit ramp' for both parties without needing to prove breach."
+    },
+    {
+      "clause_type": "indemnification",
+      "title": "Mutual Indemnification Obligations",
+      "standard_text": "The Provider agrees to indemnify and hold the Client harmless from and against any and all claims, damages, or legal expenses arising out of a third-party claim regarding a breach of warranties or negligence by the Provider.",
+      "jurisdiction": "general",
+      "risk_level_if_missing": "high",
+      "notes": "Shifts the cost of third-party lawsuits to the party responsible for the error."
+    },
+    {
+      "clause_type": "governing_law",
+      "title": "Governing Law and Forum Selection",
+      "standard_text": "This Agreement shall be governed by and construed in accordance with the laws of the Islamic Republic of Pakistan. Any legal actions arising from this contract shall be settled exclusively in the courts of Islamabad.",
+      "jurisdiction": "Pakistan",
+      "risk_level_if_missing": "high",
+      "notes": "Critical for predictability; defines which country's laws apply to the contract."
+    },
+    {
+      "clause_type": "liability",
+      "title": "Aggregate Limitation of Liability",
+      "standard_text": "To the maximum extent permitted by law, the total liability of either party for any claim arising under this Agreement shall not exceed the total amount of fees paid by the Client to the Provider during the 12 months preceding the claim.",
+      "jurisdiction": "general",
+      "risk_level_if_missing": "high",
+      "notes": "Limits the 'worst-case scenario' financial exposure for the business."
+    },
+    {
+      "clause_type": "merger",
+      "title": "Entire Agreement and Integration",
+      "standard_text": "This document constitutes the entire agreement between the parties and supersedes all prior negotiations, understandings, or representations, whether oral or written, regarding the subject matter herein.",
+      "jurisdiction": "general",
+      "risk_level_if_missing": "medium",
+      "notes": "Prevents parties from claiming that 'verbal promises' made during sales are part of the contract."
+    },
+    {
+      "clause_type": "severability",
+      "title": "Severability of Provisions",
+      "standard_text": "If any provision of this Agreement is found by a court of competent jurisdiction to be invalid or unenforceable, the remaining provisions shall continue in full force and effect as if the invalid portion had been omitted.",
+      "jurisdiction": "general",
+      "risk_level_if_missing": "low",
+      "notes": "Ensures one bad clause doesn't kill the entire contract."
+    },
+    {
+      "clause_type": "relationship",
+      "title": "Independent Contractor Status",
+      "standard_text": "The parties agree that the Provider is an independent contractor and not an employee, partner, or agent of the Client. Neither party has the authority to bind the other to any third-party obligations.",
+      "jurisdiction": "general",
+      "risk_level_if_missing": "medium",
+      "notes": "Avoids unintended employment tax or benefit liabilities."
+    },
+    {
+      "clause_type": "non_solicitation",
+      "title": "Non-Solicitation of Personnel",
+      "standard_text": "During the term of this Agreement and for a period of one year thereafter, neither party shall directly or indirectly solicit for employment any employee or consultant of the other party involved in this contract.",
+      "jurisdiction": "general",
+      "risk_level_if_missing": "medium",
+      "notes": "Prevents clients from 'poaching' your best developers or lawyers."
+    },
+    {
+      "clause_type": "intellectual_property",
+      "title": "Ownership of Intellectual Property",
+      "standard_text": "All Work Product created by the Provider specifically for the Client under this Agreement shall be considered Work Made for Hire and shall be the sole and exclusive property of the Client upon full payment of fees.",
+      "jurisdiction": "general",
+      "risk_level_if_missing": "high",
+      "notes": "Clarifies who owns the code, designs, or reports created during the project."
+    },
+    {
+      "clause_type": "dispute_resolution",
+      "title": "Arbitration and Dispute Resolution",
+      "standard_text": "Any dispute arising out of this contract that cannot be settled through mutual negotiation shall be submitted to binding arbitration under the rules of the Pakistan Arbitration Act, 1940.",
+      "jurisdiction": "Pakistan",
+      "risk_level_if_missing": "medium",
+      "notes": "Provides a faster, private alternative to public court litigation."
+    },
+    {
+      "clause_type": "notices",
+      "title": "Formal Notice Procedures",
+      "standard_text": "All formal notices required under this Agreement must be in writing and delivered via certified mail or a recognized overnight courier to the addresses specified in the preamble of this document.",
+      "jurisdiction": "general",
+      "risk_level_if_missing": "low",
+      "notes": "Ensures important communications (like termination) are legally provable."
+    },
+    {
+      "clause_type": "assignment",
+      "title": "Assignment and Transfer of Rights",
+      "standard_text": "Neither party may assign or transfer its rights or obligations under this Agreement to a third party without the express prior written consent of the other party.",
+      "jurisdiction": "general",
+      "risk_level_if_missing": "medium",
+      "notes": "Prevents the contract from being 'sold' to a competitor or unknown third party."
+    },
+    {
+      "clause_type": "waiver",
+      "title": "No Waiver of Rights",
+      "standard_text": "The failure of either party to enforce any provision of this Agreement at any time shall not be construed as a waiver of such provision or the right to enforce it at a later date.",
+      "jurisdiction": "general",
+      "risk_level_if_missing": "low",
+      "notes": "Ensures that being 'nice' once doesn't mean you lose your legal rights forever."
+    }
+  ]

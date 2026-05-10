@@ -63,8 +63,12 @@ export async function signup(formData: FormData) {
  */
 export async function signOut() {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  
+  try {
+    await supabase.auth.signOut();
+  } catch (err) {
+    console.error("Server signout error:", err);
+  }
 
   revalidatePath("/", "layout");
-  redirect("/");
 }

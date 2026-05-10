@@ -1,91 +1,134 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useRef } from "react";
 import { Users, Shield, Zap, Globe } from "lucide-react";
+import gsap from "gsap";
+import { le } from "@/lib/design-system";
+import { useAppReducedMotion } from "@/lib/motion-utils";
 
 export default function AboutPage() {
+  const reduceMotion = useAppReducedMotion();
+  const heroRef = useRef<HTMLElement | null>(null);
+  const valuesRef = useRef<HTMLElement | null>(null);
+  const teamRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (reduceMotion) return;
+    if (heroRef.current) {
+      gsap.fromTo(
+        heroRef.current.querySelectorAll("[data-animate-hero]"),
+        { y: 18, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, stagger: 0.12, ease: "power2.out" },
+      );
+    }
+    if (valuesRef.current) {
+      gsap.fromTo(
+        valuesRef.current.querySelectorAll("[data-animate-value]"),
+        { y: 16, opacity: 0, scale: 0.98 },
+        {
+          y: 0,
+          opacity: 1,
+          scale: 1,
+          duration: 0.55,
+          stagger: 0.08,
+          delay: 0.15,
+          ease: "power2.out",
+        },
+      );
+    }
+    if (teamRef.current) {
+      gsap.fromTo(
+        teamRef.current.querySelectorAll("[data-animate-team]"),
+        { y: 16, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, delay: 0.25, ease: "power2.out" },
+      );
+    }
+  }, [reduceMotion]);
+
   return (
-    <div className="min-h-screen bg-[#F2F1EE]">
-      {/* Hero Section */}
-      <section className="bg-[#1C212B] text-white py-24">
+    <div className="min-h-screen" style={{ backgroundColor: le.background }}>
+      <section
+        ref={heroRef}
+        className="py-24 text-white"
+        style={{ background: `linear-gradient(160deg, ${le.primary} 0%, #243d5c 100%)` }}
+      >
         <div className="container mx-auto px-6 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold font-serif mb-6">
-            Democratizing Legal Intelligence
+          <h1
+            data-animate-hero
+            className="mb-6 font-serif text-4xl font-bold md:text-6xl"
+          >
+            Democratizing legal intelligence
           </h1>
-          <p className="text-xl text-white/70 max-w-2xl mx-auto leading-relaxed">
-            We're on a mission to make professional-grade legal document analysis accessible, accurate, and instant for everyone effectively leveling the playing field.
+          <p
+            data-animate-hero
+            className="mx-auto max-w-2xl text-lg leading-relaxed text-white/80 md:text-xl"
+          >
+            We make professional-grade document analysis accessible, accurate, and fast—so you can
+            decide with confidence.
           </p>
         </div>
       </section>
 
-      {/* Values Section */}
-      <section className="py-20 px-6">
+      <section ref={valuesRef} className="px-6 py-20">
         <div className="container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="bg-white p-8 rounded-xl border border-[#E5E5E5] shadow-sm">
-              <div className="w-12 h-12 bg-[#308970]/10 rounded-lg flex items-center justify-center mb-6">
-                 <Shield className="w-6 h-6 text-[#308970]" />
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+            {[
+              { icon: Shield, title: "Trust first", body: "Security and confidentiality at the core. Your data never trains public models.", },
+              { icon: Zap, title: "Radical speed", body: "Complex contracts structured in seconds—not a substitute for counsel, but a head start.", },
+              { icon: Users, title: "Human centric", body: "AI suggests; you decide. Built to empower professionals, not replace judgment.", },
+              { icon: Globe, title: "Global standard", body: "Designed for cross-border teams who need consistent review workflows.", },
+            ].map(({ icon: Icon, title, body }) => (
+              <div
+                key={title}
+                data-animate-value
+                className="rounded-[12px] border border-slate-200 bg-white p-8 shadow-sm transition-shadow hover:shadow-md"
+              >
+                <div
+                  className="mb-6 flex h-12 w-12 items-center justify-center rounded-[8px]"
+                  style={{ backgroundColor: `${le.secondary}15` }}
+                >
+                  <Icon className="h-6 w-6" style={{ color: le.secondary }} />
+                </div>
+                <h3 className="mb-3 text-xl font-bold" style={{ color: le.text }}>
+                  {title}
+                </h3>
+                <p style={{ color: le.muted }}>{body}</p>
               </div>
-              <h3 className="text-xl font-bold text-[#1C212B] mb-3">Trust First</h3>
-              <p className="text-[#1C212B]/70">Security and confidentiality are at the core of everything we build. Your data never trains our public models.</p>
-            </div>
-            <div className="bg-white p-8 rounded-xl border border-[#E5E5E5] shadow-sm">
-              <div className="w-12 h-12 bg-[#308970]/10 rounded-lg flex items-center justify-center mb-6">
-                 <Zap className="w-6 h-6 text-[#308970]" />
-              </div>
-              <h3 className="text-xl font-bold text-[#1C212B] mb-3">Radical Speed</h3>
-              <p className="text-[#1C212B]/70">We believe legal review shouldn't take days. Our AI analyzes complex contracts in seconds.</p>
-            </div>
-             <div className="bg-white p-8 rounded-xl border border-[#E5E5E5] shadow-sm">
-              <div className="w-12 h-12 bg-[#308970]/10 rounded-lg flex items-center justify-center mb-6">
-                 <Users className="w-6 h-6 text-[#308970]" />
-              </div>
-              <h3 className="text-xl font-bold text-[#1C212B] mb-3">Human Centric</h3>
-              <p className="text-[#1C212B]/70">AI suggests, humans decide. We build tools that empower legal professionals, not replace them.</p>
-            </div>
-             <div className="bg-white p-8 rounded-xl border border-[#E5E5E5] shadow-sm">
-              <div className="w-12 h-12 bg-[#308970]/10 rounded-lg flex items-center justify-center mb-6">
-                 <Globe className="w-6 h-6 text-[#308970]" />
-              </div>
-              <h3 className="text-xl font-bold text-[#1C212B] mb-3">Global Standard</h3>
-              <p className="text-[#1C212B]/70">Trained on international law and jurisdictions to serve a global client base effectively.</p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Team Section (Placeholder) */}
-      <section className="py-20 bg-white border-t border-[#E5E5E5]">
+      <section ref={teamRef} className="border-t border-slate-200 bg-white py-20">
         <div className="container mx-auto px-6 text-center">
-            <h2 className="text-3xl font-bold text-[#1C212B] mb-12 font-serif">Meet the Experts</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-4xl mx-auto">
-                 {/* Team Member 1 */}
-                <div className="group cursor-pointer">
-                    <div className="w-32 h-32 bg-[#F2F1EE] rounded-full mx-auto mb-6 overflow-hidden border-2 border-transparent group-hover:border-[#308970] transition-all">
-                        {/* Placeholder for legal image */}
-                        <div className="w-full h-full flex items-center justify-center text-[#1C212B]/30">Photo</div>
-                    </div>
-                    <h3 className="text-xl font-bold text-[#1C212B]">Sarah Jennings</h3>
-                    <p className="text-[#308970] font-medium mb-2">CEO & Co-Founder</p>
-                    <p className="text-sm text-[#1C212B]/60">Former Big Law partner with 15+ years of M&A experience.</p>
+          <h2 className="mb-12 font-serif text-3xl font-bold" style={{ color: le.text }}>
+            Meet the team
+          </h2>
+          <div className="mx-auto grid max-w-4xl grid-cols-1 gap-12 md:grid-cols-3">
+            {[
+              { name: "Sarah Jennings", role: "CEO & Co-Founder", bio: "Former Big Law partner, M&A.", },
+              { name: "David Chen", role: "CTO & Co-Founder", bio: "NLP and retrieval for legal text.", },
+              { name: "Elena Rodriguez", role: "Head of Product", bio: "Complex tools, simple surfaces.", },
+            ].map((m) => (
+              <div key={m.name} data-animate-team className="group cursor-pointer">
+                <div
+                  className="mx-auto mb-6 flex h-32 w-32 items-center justify-center overflow-hidden rounded-full border-2 border-transparent transition-all group-hover:border-[#2563eb]"
+                  style={{ backgroundColor: le.background }}
+                >
+                  <span className="text-sm font-medium text-slate-400">Photo</span>
                 </div>
-                 {/* Team Member 2 */}
-                <div className="group cursor-pointer">
-                    <div className="w-32 h-32 bg-[#F2F1EE] rounded-full mx-auto mb-6 overflow-hidden border-2 border-transparent group-hover:border-[#308970] transition-all">
-                         <div className="w-full h-full flex items-center justify-center text-[#1C212B]/30">Photo</div>
-                    </div>
-                    <h3 className="text-xl font-bold text-[#1C212B]">David Chen</h3>
-                    <p className="text-[#308970] font-medium mb-2">CTO & Co-Founder</p>
-                    <p className="text-sm text-[#1C212B]/60">AI Researcher from MIT. Specialized in NLP for legal texts.</p>
-                </div>
-                 {/* Team Member 3 */}
-                <div className="group cursor-pointer">
-                    <div className="w-32 h-32 bg-[#F2F1EE] rounded-full mx-auto mb-6 overflow-hidden border-2 border-transparent group-hover:border-[#308970] transition-all">
-                        <div className="w-full h-full flex items-center justify-center text-[#1C212B]/30">Photo</div>
-                    </div>
-                    <h3 className="text-xl font-bold text-[#1C212B]">Elena Rodriguez</h3>
-                    <p className="text-[#308970] font-medium mb-2">Head of Product</p>
-                    <p className="text-sm text-[#1C212B]/60">Design obsessionist. Making complex tools feel simple.</p>
-                </div>
-            </div>
+                <h3 className="text-xl font-bold" style={{ color: le.text }}>
+                  {m.name}
+                </h3>
+                <p className="mb-2 font-medium" style={{ color: le.secondary }}>
+                  {m.role}
+                </p>
+                <p className="text-sm" style={{ color: le.muted }}>
+                  {m.bio}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     </div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Briefcase, Building, MapPin } from "lucide-react";
+import { le } from "@/lib/design-system";
 
 const JOBS = [
   {
@@ -28,68 +29,82 @@ const JOBS = [
 
 export default function CareersPage() {
   return (
-    <div className="min-h-screen bg-[#F2F1EE]">
-      {/* Hero */}
-      <section className="bg-[#1C212B] text-white py-24">
+    <div className="min-h-screen" style={{ backgroundColor: le.background }}>
+      <section
+        className="py-24 text-white"
+        style={{ background: `linear-gradient(160deg, ${le.primary} 0%, #243d5c 100%)` }}
+      >
         <div className="container mx-auto px-6 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold font-serif mb-6">
-            Build the Future of Law
-          </h1>
-          <p className="text-xl text-white/70 max-w-2xl mx-auto mb-8">
-            Join a team of passionate engineers, designers, and legal experts re-imagining how the world interacts with contracts.
+          <h1 className="mb-6 font-serif text-4xl font-bold md:text-6xl">Build the future of law</h1>
+          <p className="mx-auto mb-8 max-w-2xl text-lg text-white/80 md:text-xl">
+            Engineers, designers, and legal experts reimagining how the world works with contracts.
           </p>
-          <Button size="lg" className="bg-[#308970] hover:bg-[#266d59] text-white border-0">
-            View Open Positions
+          <Button size="lg" variant="secondary" asChild>
+            <Link href="#open-roles">View open positions</Link>
           </Button>
         </div>
       </section>
 
-      {/* Values/Culture */}
-      <section className="py-20 bg-white">
+      <section className="bg-white py-20">
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-24">
+          <div className="mb-24 grid grid-cols-1 items-center gap-12 md:grid-cols-2">
             <div>
-              <h2 className="text-3xl font-bold text-[#1C212B] mb-6 font-serif">Culture at LegalEagle</h2>
-              <p className="text-[#1C212B]/70 mb-4 text-lg">
-                We're a remote-first company that values outcome over output. We believe in deep work, swift execution, and maintaining a healthy life outside of the office.
+              <h2 className="mb-6 font-serif text-3xl font-bold" style={{ color: le.text }}>
+                Culture at LegalEagle
+              </h2>
+              <p className="mb-4 text-lg" style={{ color: le.muted }}>
+                Remote-first, outcome-driven, and serious about depth of work—with room for life outside
+                the job.
               </p>
-              <p className="text-[#1C212B]/70 text-lg">
-                Our team is diverse, global, and united by a shared curiosity about the intersection of technology and law.
+              <p className="text-lg" style={{ color: le.muted }}>
+                Diverse, global, and curious about the intersection of technology and law.
               </p>
             </div>
-            <div className="bg-[#F2F1EE] rounded-xl h-64 md:h-96 w-full flex items-center justify-center text-[#1C212B]/20 font-bold text-3xl border border-[#E5E5E5]">
-              Team Photo Placeholder
+            <div
+              className="flex h-64 w-full items-center justify-center rounded-[12px] border border-slate-200 text-2xl font-bold text-slate-300 md:h-96"
+              style={{ backgroundColor: le.background }}
+            >
+              Team photo
             </div>
           </div>
 
-          {/* Open Roles */}
-          <div>
-            <h2 className="text-3xl font-bold text-[#1C212B] mb-12 text-center font-serif">Open Positions</h2>
-            <div className="space-y-4 max-w-4xl mx-auto">
+          <div id="open-roles">
+            <h2 className="mb-12 text-center font-serif text-3xl font-bold" style={{ color: le.text }}>
+              Open positions
+            </h2>
+            <div className="mx-auto max-w-4xl space-y-4">
               {JOBS.map((job) => (
                 <div
                   key={job.id}
-                  className="bg-white border border-[#E5E5E5] p-6 rounded-lg hover:border-[#308970] transition-colors flex flex-col md:flex-row md:items-center justify-between group"
+                  className="group flex flex-col justify-between gap-4 rounded-[12px] border border-slate-200 bg-white p-6 transition-all hover:border-[#2563eb]/40 hover:shadow-md md:flex-row md:items-center"
                 >
-                  <div className="mb-4 md:mb-0">
-                    <h3 className="text-xl font-bold text-[#1C212B] group-hover:text-[#308970] transition-colors">{job.title}</h3>
-                    <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-[#1C212B]/60">
-                      <span className="flex items-center">
-                        <Briefcase className="w-4 h-4 mr-1" />
+                  <div>
+                    <h3
+                      className="text-xl font-bold transition-colors group-hover:text-[#2563eb]"
+                      style={{ color: le.text }}
+                    >
+                      {job.title}
+                    </h3>
+                    <div className="mt-2 flex flex-wrap items-center gap-4 text-sm" style={{ color: le.muted }}>
+                      <span className="flex items-center gap-1">
+                        <Briefcase className="h-4 w-4" />
                         {job.department}
                       </span>
-                      <span className="flex items-center">
-                        <MapPin className="w-4 h-4 mr-1" />
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
                         {job.location}
                       </span>
-                      <span className="flex items-center">
-                        <Building className="w-4 h-4 mr-1" />
+                      <span className="flex items-center gap-1">
+                        <Building className="h-4 w-4" />
                         {job.type}
                       </span>
                     </div>
                   </div>
-                  <Button variant="outline" className="shrink-0 group-hover:bg-[#308970] group-hover:text-white group-hover:border-[#308970] transition-all">
-                    Apply Now
+                  <Button
+                    variant="outline"
+                    className="shrink-0 transition-colors group-hover:border-[#1a3a52] group-hover:bg-[#1a3a52] group-hover:text-white"
+                  >
+                    Apply
                   </Button>
                 </div>
               ))}

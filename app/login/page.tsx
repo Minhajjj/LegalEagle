@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,9 +12,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
-import { login } from "@/app/auth/actions"; // ← Import the server action
+import { createClient } from "@/utils/supabase/client";
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
@@ -38,12 +38,22 @@ export default function LoginPage() {
     setMessage(null);
 
     try {
-      // Create FormData from the form
-      const formData = new FormData(e.currentTarget);
+      // Authenticate via client-side Supabase to trigger onAuthStateChange
+      const supabase = createClient();
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
 
-      // Call the server action
-      await login(formData);
-      // Note: The redirect happens in the server action, so we won't reach here on success
+      if (authError) {
+        setError(authError.message);
+        setLoading(false);
+        return;
+      }
+
+      // Success: redirect client-side so AuthContext updates properly
+      router.push("/dashboard");
+      router.refresh();
     } catch (err: any) {
       // If there's an error before redirect
       setError(err.message || "An error occurred");
@@ -52,10 +62,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F2F1EE]">
+    <div className="min-h-screen bg-[#f8fafc]">
       <div className="flex min-h-[calc(100vh-4rem)]">
         {/* Left Side - Image */}
-        <div className="hidden lg:flex lg:w-1/2 bg-linear-to-br from-[#1C212B] to-[#308970] relative">
+        <div className="hidden lg:flex lg:w-1/2 bg-linear-to-br from-[#1a3a52] to-[#2563eb] relative">
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800')] bg-cover bg-center opacity-20"></div>
           <div className="relative z-10 flex items-center justify-center w-full p-12">
             <div className="text-white">
@@ -68,13 +78,13 @@ export default function LoginPage() {
         </div>
 
         {/* Right Side - Form */}
-        <div className="flex-1 flex items-center justify-center bg-[#F2F1EE] p-6">
+        <div className="flex-1 flex items-center justify-center bg-[#f8fafc] p-6">
           <Card className="w-full max-w-md">
             <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl font-bold text-[#1C212B]">
+              <CardTitle className="text-2xl font-bold text-[#0f172a]">
                 Welcome back
               </CardTitle>
-              <CardDescription className="text-[#1C212B]/70">
+              <CardDescription className="text-[#64748b]">
                 Sign in to your account to continue
               </CardDescription>
             </CardHeader>
@@ -97,7 +107,7 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <label
                     htmlFor="email"
-                    className="text-sm font-medium text-[#1C212B]"
+                    className="text-sm font-medium text-[#0f172a]"
                   >
                     Email
                   </label>
@@ -117,7 +127,7 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <label
                     htmlFor="password"
-                    className="text-sm font-medium text-[#1C212B]"
+                    className="text-sm font-medium text-[#0f172a]"
                   >
                     Password
                   </label>
@@ -137,7 +147,7 @@ export default function LoginPage() {
                 <div className="text-right">
                   <Link
                     href="/forgot-password"
-                    className="text-sm text-[#308970] hover:underline"
+                    className="text-sm font-medium text-[#2563eb] hover:text-[#1d4ed8] hover:underline"
                   >
                     Forgot password?
                   </Link>
@@ -145,7 +155,7 @@ export default function LoginPage() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-[#308970] hover:bg-[#2a7863]"
+                  className="w-full"
                   disabled={loading}
                 >
                   {loading ? (
@@ -177,11 +187,11 @@ export default function LoginPage() {
                   )}
                 </Button>
 
-                <p className="text-center text-sm text-[#1C212B]/70">
+                <p className="text-center text-sm text-[#64748b]">
                   Don't have an account?{" "}
                   <Link
                     href="/signup"
-                    className="text-[#308970] hover:underline font-medium"
+                    className="font-medium text-[#2563eb] hover:text-[#1d4ed8] hover:underline"
                   >
                     Sign up
                   </Link>
@@ -192,5 +202,19 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] text-[#0f172a]">
+          Loading…
+        </div>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }

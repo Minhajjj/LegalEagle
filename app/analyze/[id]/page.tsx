@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { RiskCard } from "@/components/risk-card";
 import { ChatInput } from "@/components/chat-input";
@@ -9,13 +9,21 @@ import { Button } from "@/components/ui/button";
 import { Download, Share2, Sparkles, Loader2 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
+import { askDocumentQuestion, generateDocumentRisks } from "@/app/analyze/actions";
+import { motion } from "framer-motion";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { le } from "@/lib/design-system";
+import { useAppReducedMotion } from "@/lib/motion-utils";
 
 interface Risk {
   id: string;
   severity: "High" | "Medium" | "Low";
   clause_name: string;
   explanation: string;
-  chunk_index: number;
+  confidence?: number;
+  recommendation?: string;
 }
 
 interface Document {
@@ -24,6 +32,14 @@ interface Document {
   created_at: string;
   status: string;
   content?: string;
+  metadata?: {
+    analysis?: {
+      generated_at?: string;
+      model?: string;
+      confidence_policy?: string;
+      risks?: Risk[];
+    };
+  };
 }
 
 export default function AnalyzePage({
@@ -31,6 +47,7 @@ export default function AnalyzePage({
 }: {
   params: Promise<{ id: string }> | { id: string };
 }) {
+  const reduceMotion = useAppReducedMotion();
   const [documentId, setDocumentId] = useState<string>("");
   const [document, setDocument] = useState<Document | null>(null);
   const [risks, setRisks] = useState<Risk[]>([]);
@@ -39,6 +56,10 @@ export default function AnalyzePage({
     Array<{ role: "user" | "assistant"; content: string }>
   >([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [selectedRiskId, setSelectedRiskId] = useState<string | null>(null);
+  const leftPaneRef = useRef<HTMLDivElement | null>(null);
+  const centerPaneRef = useRef<HTMLDivElement | null>(null);
+  const rightPaneRef = useRef<HTMLDivElement | null>(null);
 
   const supabase = createClient();
   const router = useRouter();
@@ -61,10 +82,44 @@ export default function AnalyzePage({
     }
   }, [documentId]);
 
+  useEffect(() => {
+    if (loading || reduceMotion) return;
+    const targets = [leftPaneRef.current, centerPaneRef.current, rightPaneRef.current].filter(
+      Boolean,
+    );
+    gsap.fromTo(
+      targets,
+      { opacity: 0, y: 16 },
+      { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: "power2.out" },
+    );
+  }, [loading, documentId, reduceMotion]);
+
+  useGSAP(
+    () => {
+      if (reduceMotion || !leftPaneRef.current || !risks.length) return;
+      gsap.registerPlugin(ScrollTrigger);
+      const scroller = leftPaneRef.current;
+      scroller.querySelectorAll(".risk-row").forEach((el) => {
+        gsap.from(el, {
+          opacity: 0,
+          y: 14,
+          duration: 0.45,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: el,
+            scroller,
+            start: "top 90%",
+            toggleActions: "play none none none",
+          },
+        });
+      });
+    },
+    { scope: leftPaneRef, dependencies: [risks.length, reduceMotion, documentId] },
+  );
+
   const fetchDocumentData = async () => {
     setLoading(true);
     try {
-      // Fetch document details
       const { data: docData, error: docError } = await supabase
         .from("documents")
         .select("*")
@@ -74,82 +129,84 @@ export default function AnalyzePage({
       if (docError) throw docError;
       setDocument(docData);
 
-      // Fetch document chunks (content)
       const { data: chunksData, error: chunksError } = await supabase
         .from("document_chunks")
-        .select("content, chunk_index")
+        .select("content, metadata, created_at")
         .eq("document_id", documentId)
-        .order("chunk_index");
+        .order("created_at", { ascending: true });
 
       if (chunksError) throw chunksError;
 
-      // Combine chunks into full document content
       const fullContent =
         chunksData?.map((chunk) => chunk.content).join("\n\n") || "";
 
-      // For now, use mock risks. In production, you'd fetch from a risks table
-      // or generate them using AI
-      const mockRisks: Risk[] = [
-        {
-          id: "1",
-          severity: "High",
-          clause_name: "Unilateral Termination Clause",
-          explanation:
-            "This clause allows the employer to terminate the agreement without cause with only 7 days notice, while requiring 30 days notice from the employee.",
-          chunk_index: 0,
-        },
-        {
-          id: "2",
-          severity: "Medium",
-          clause_name: "Non-Compete Duration",
-          explanation:
-            "The non-compete clause extends for 24 months post-termination, which may be considered excessive in many jurisdictions.",
-          chunk_index: 1,
-        },
-        {
-          id: "3",
-          severity: "High",
-          clause_name: "Liability Waiver",
-          explanation:
-            "This clause completely waives the company's liability for any damages, including gross negligence, which may be unenforceable.",
-          chunk_index: 2,
-        },
-        {
-          id: "4",
-          severity: "Low",
-          clause_name: "Payment Terms",
-          explanation:
-            "Payment terms are standard with net-30 days, which is reasonable for this type of agreement.",
-          chunk_index: 3,
-        },
-      ];
+      const { data: dbRisks, error: dbRisksError } = await supabase
+        .from("document_risks")
+        .select("id, severity, clause_name, explanation, recommendation, confidence")
+        .eq("document_id", documentId)
+        .order("created_at", { ascending: true });
 
-      setRisks(mockRisks);
+      if (dbRisksError) throw dbRisksError;
+
+      let resolvedRisks =
+        (dbRisks ?? []).map((risk) => ({
+          id: risk.id,
+          severity: risk.severity as "High" | "Medium" | "Low",
+          clause_name: risk.clause_name,
+          explanation: risk.explanation,
+          recommendation: risk.recommendation ?? undefined,
+          confidence: Number(risk.confidence ?? 0.5),
+        })) ?? [];
+
+      if (!resolvedRisks.length) {
+        try {
+          const generated = await generateDocumentRisks(documentId);
+          resolvedRisks = generated.risks;
+        } catch (analysisError) {
+          console.error("Risk generation fallback:", analysisError);
+          resolvedRisks = [];
+        }
+      }
+
+      setRisks(resolvedRisks);
+      setSelectedRiskId(resolvedRisks[0]?.id ?? null);
       setDocument({ ...docData, content: fullContent });
     } catch (error) {
       console.error("Error fetching document:", error);
-      router.push("/dashboard");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSendMessage = (message: string) => {
-    setChatMessages([...chatMessages, { role: "user", content: message }]);
+  const handleSendMessage = async (message: string) => {
+    setChatMessages((prev) => [...prev, { role: "user", content: message }]);
     setIsAnalyzing(true);
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      const result = await askDocumentQuestion({
+        documentId,
+        message,
+      });
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: result.answer,
+        },
+      ]);
+    } catch (error) {
+      console.error("Question handling error:", error);
       setChatMessages((prev) => [
         ...prev,
         {
           role: "assistant",
           content:
-            "Based on the document analysis, this clause relates to termination rights. Would you like me to explain the legal implications in more detail?",
+            "I could not answer that right now. Please try again in a moment.",
         },
       ]);
+    } finally {
       setIsAnalyzing(false);
-    }, 1500);
+    }
   };
 
   const highlightRiskyClauses = (content: string) => {
@@ -163,28 +220,45 @@ export default function AnalyzePage({
       );
 
       return (
-        <p
+        <motion.p
           key={index}
-          className={`mb-4 ${
+          className="mb-4 rounded-r"
+          style={
             isRisky
-              ? "bg-[#E63946]/5 px-3 py-2 rounded-r border-l-4 border-[#E63946] font-medium"
-              : ""
-          }`}
+              ? {
+                  backgroundColor: `${le.warning}0d`,
+                  borderLeft: `4px solid ${le.warning}`,
+                  paddingLeft: "0.75rem",
+                  paddingTop: "0.5rem",
+                  paddingBottom: "0.5rem",
+                  fontWeight: 500,
+                }
+              : undefined
+          }
+          initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-20px" }}
+          transition={{ duration: 0.35, delay: Math.min(index * 0.02, 0.4) }}
         >
           {line}
-        </p>
+        </motion.p>
       );
     });
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F2F1EE] flex">
+      <div className="min-h-screen flex" style={{ backgroundColor: le.background }}>
         <Sidebar />
         <div className="flex-1 ml-20 flex items-center justify-center">
           <div className="text-center">
-            <Loader2 className="w-12 h-12 text-[#308970] animate-spin mx-auto mb-4" />
-            <p className="text-[#308970] font-bold">Loading document...</p>
+            <Loader2
+              className="w-12 h-12 mx-auto mb-4 animate-spin"
+              style={{ color: le.secondary }}
+            />
+            <p className="font-semibold" style={{ color: le.primary }}>
+              Loading document…
+            </p>
           </div>
         </div>
       </div>
@@ -193,13 +267,19 @@ export default function AnalyzePage({
 
   if (!document) {
     return (
-      <div className="min-h-screen bg-[#F2F1EE] flex">
+      <div className="min-h-screen flex" style={{ backgroundColor: le.background }}>
         <Sidebar />
         <div className="flex-1 ml-20 flex items-center justify-center">
           <div className="text-center">
-            <p className="text-[#308970] font-bold mb-4">Document not found</p>
-            <Button onClick={() => router.push("/dashboard")}>
-              Back to Dashboard
+            <p className="font-semibold mb-4" style={{ color: le.primary }}>
+              Document not found
+            </p>
+            <Button
+              onClick={() => router.push("/dashboard")}
+              className="rounded-[8px] font-semibold text-white"
+              style={{ backgroundColor: le.primary }}
+            >
+              Back to dashboard
             </Button>
           </div>
         </div>
@@ -223,60 +303,92 @@ export default function AnalyzePage({
   const riskSummary = `This document contains ${highRiskCount} high-risk, ${mediumRiskCount} medium-risk, and ${lowRiskCount} low-risk clauses that warrant review.`;
 
   return (
-    <div className="min-h-screen bg-[#F2F1EE] flex">
+    <div className="min-h-screen flex" style={{ backgroundColor: le.background }}>
       <Sidebar />
 
-      {/* Main Layout Container */}
       <div className="flex-1 ml-20 flex overflow-hidden">
-        {/* Left Column - Risk List */}
-        <div className="w-80 bg-white border-r border-[#308970]/10 p-6 overflow-y-auto">
-          <h2 className="text-xl font-bold text-[#308970] mb-6 flex items-center gap-2">
-            <Sparkles className="w-5 h-5" /> Red Flags ({risks.length})
+        <div
+          ref={leftPaneRef}
+          className="w-80 bg-white border-r border-slate-200 p-6 overflow-y-auto shrink-0"
+        >
+          <h2 className="text-lg font-bold mb-6 flex items-center gap-2" style={{ color: le.primary }}>
+            <Sparkles className="w-5 h-5" style={{ color: le.secondary }} />
+            Findings ({risks.length})
           </h2>
-          <div className="space-y-3">
+          <div className="grid grid-cols-3 gap-2 mb-5">
+            {[
+              { label: "High", n: highRiskCount, c: le.warning },
+              { label: "Med", n: mediumRiskCount, c: le.medium },
+              { label: "Low", n: lowRiskCount, c: le.success },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="rounded-[12px] px-2 py-2 text-center border border-slate-100"
+                style={{ backgroundColor: `${s.c}12` }}
+              >
+                <p className="text-[10px] font-bold uppercase" style={{ color: s.c }}>
+                  {s.label}
+                </p>
+                <p className="text-lg font-bold tabular-nums" style={{ color: le.text }}>
+                  {s.n}
+                </p>
+              </div>
+            ))}
+          </div>
+          <div className="space-y-0">
             {risks.map((risk) => (
-              <RiskCard
-                key={risk.id}
-                severity={risk.severity}
-                clauseName={risk.clause_name}
-                explanation={risk.explanation}
-              />
+              <div key={risk.id} className="risk-row">
+                <RiskCard
+                  id={`risk-${risk.id}`}
+                  severity={risk.severity}
+                  clauseName={risk.clause_name}
+                  explanation={risk.explanation}
+                  confidence={risk.confidence}
+                  recommendation={risk.recommendation}
+                  active={selectedRiskId === risk.id}
+                  onClick={() => setSelectedRiskId(risk.id)}
+                />
+              </div>
             ))}
           </div>
         </div>
 
-        {/* Center Column - PDF Viewer */}
-        <div className="flex-1 p-8 overflow-y-auto bg-[#F2F1EE]">
+        <div ref={centerPaneRef} className="flex-1 p-6 sm:p-8 overflow-y-auto">
           <div className="max-w-4xl mx-auto">
-            <div className="mb-6 flex items-center justify-between">
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-[#308970] mb-2">
+                <h2 className="text-2xl font-bold mb-2" style={{ color: le.primary }}>
                   {document.name}
                 </h2>
-                <p className="text-sm font-bold text-[#308970]/60">
-                  ID: {documentId} • {formattedDate} • Status: {document.status}
+                <p className="text-sm font-medium" style={{ color: le.muted }}>
+                  {documentId} · {formattedDate} · {document.status}
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-[#308970] text-[#308970] font-bold"
+                  className="rounded-[8px] font-semibold border-slate-200"
+                  style={{ color: le.primary }}
                 >
                   <Share2 className="w-4 h-4 mr-2" /> Share
                 </Button>
-                <Button className="bg-[#308970] text-white font-bold">
+                <Button
+                  size="sm"
+                  className="rounded-[8px] font-semibold text-white"
+                  style={{ backgroundColor: le.secondary }}
+                >
                   <Download className="w-4 h-4 mr-2" /> Export
                 </Button>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-[#308970]/10 p-12">
-              <div className="font-serif text-[#1C212B] leading-relaxed">
+            <div className="bg-white rounded-[12px] shadow-sm border border-slate-200 p-8 sm:p-12">
+              <div className="font-serif leading-relaxed" style={{ color: le.text }}>
                 {document.content ? (
                   highlightRiskyClauses(document.content)
                 ) : (
-                  <p className="text-[#308970]/60 italic">
+                  <p className="italic" style={{ color: le.muted }}>
                     Document content not available
                   </p>
                 )}
@@ -285,47 +397,67 @@ export default function AnalyzePage({
           </div>
         </div>
 
-        {/* Right Column - AI Chat */}
-        <div className="w-96 bg-white border-l border-[#308970]/10 flex flex-col">
-          <div className="p-6 border-b border-[#308970]/10 bg-[#308970]/5">
-            <CardTitle className="text-lg font-bold text-[#308970] mb-3">
-              Risk Summary
+        <div
+          ref={rightPaneRef}
+          className="w-96 bg-white border-l border-slate-200 flex flex-col shrink-0"
+        >
+          <div
+            className="p-6 border-b border-slate-200"
+            style={{ backgroundColor: `${le.primary}08` }}
+          >
+            <CardTitle className="text-lg font-bold mb-3" style={{ color: le.primary }}>
+              Risk summary
             </CardTitle>
-            <p className="text-sm font-bold text-[#308970]/80 leading-relaxed">
+            <p className="text-sm font-medium leading-relaxed" style={{ color: le.text }}>
               {riskSummary}
             </p>
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-white">
             {chatMessages.map((msg, index) => (
-              <div
+              <motion.div
                 key={index}
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
               >
                 <div
-                  className={`max-w-[85%] rounded-2xl p-4 font-bold ${
+                  className={`max-w-[85%] rounded-2xl p-4 font-medium text-sm ${
                     msg.role === "user"
-                      ? "bg-[#308970] text-white rounded-tr-none"
-                      : "bg-[#F2F1EE] text-[#308970] rounded-tl-none border border-[#308970]/10"
+                      ? "rounded-tr-sm text-white"
+                      : "rounded-tl-sm border border-slate-200"
                   }`}
+                  style={
+                    msg.role === "user"
+                      ? { backgroundColor: le.primary }
+                      : { backgroundColor: le.background, color: le.text }
+                  }
                 >
-                  <p className="text-sm">{msg.content}</p>
+                  {msg.content}
                 </div>
-              </div>
+              </motion.div>
             ))}
             {isAnalyzing && (
-              <div className="flex justify-start">
-                <div className="bg-[#F2F1EE] text-[#308970] rounded-2xl rounded-tl-none p-4 border border-[#308970]/10">
-                  <div className="flex items-center gap-2">
+              <motion.div
+                className="flex justify-start"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <div
+                  className="rounded-2xl rounded-tl-sm p-4 border border-slate-200"
+                  style={{ backgroundColor: le.background, color: le.primary }}
+                >
+                  <div className="flex items-center gap-2 text-sm">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <p className="text-sm">Analyzing...</p>
+                    Analyzing…
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
           </div>
 
-          <div className="p-6 border-t border-[#308970]/10">
+          <div className="p-6 border-t border-slate-200 bg-white">
             <ChatInput onSend={handleSendMessage} />
           </div>
         </div>
