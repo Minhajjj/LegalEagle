@@ -31,7 +31,7 @@ export function Sidebar() {
 
   return (
     <div
-      className="w-20 min-h-screen flex flex-col items-center py-8 border-r border-white/10 shrink-0"
+      className="hidden md:flex w-20 sticky top-[68px] h-[calc(100vh-68px)] flex-col items-center py-8 border-r border-white/10 shrink-0 overflow-y-auto"
       style={{ backgroundColor: le.primary }}
     >
       <div className="mb-10">

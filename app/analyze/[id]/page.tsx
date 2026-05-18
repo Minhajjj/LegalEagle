@@ -250,7 +250,7 @@ export default function AnalyzePage({
     return (
       <div className="min-h-screen flex" style={{ backgroundColor: le.background }}>
         <Sidebar />
-        <div className="flex-1 ml-20 flex items-center justify-center">
+        <div className="flex-1 flex w-full max-w-full overflow-x-hidden items-center justify-center">
           <div className="text-center">
             <Loader2
               className="w-12 h-12 mx-auto mb-4 animate-spin"
@@ -269,7 +269,7 @@ export default function AnalyzePage({
     return (
       <div className="min-h-screen flex" style={{ backgroundColor: le.background }}>
         <Sidebar />
-        <div className="flex-1 ml-20 flex items-center justify-center">
+        <div className="flex-1 flex w-full max-w-full overflow-x-hidden items-center justify-center">
           <div className="text-center">
             <p className="font-semibold mb-4" style={{ color: le.primary }}>
               Document not found
@@ -306,7 +306,7 @@ export default function AnalyzePage({
     <div className="min-h-screen flex" style={{ backgroundColor: le.background }}>
       <Sidebar />
 
-      <div className="flex-1 ml-20 flex overflow-hidden">
+      <div className="flex-1 flex w-full max-w-full overflow-hidden">
         <div
           ref={leftPaneRef}
           className="w-80 bg-white border-r border-slate-200 p-6 overflow-y-auto shrink-0"

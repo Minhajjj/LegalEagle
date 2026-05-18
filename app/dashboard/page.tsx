@@ -19,6 +19,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -52,6 +58,7 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [documents, setDocuments] = useState<Document[]>([]);
   const [riskTotals, setRiskTotals] = useState({ high: 0, medium: 0, low: 0 });
+  const [riskFilter, setRiskFilter] = useState<"All" | "High" | "Medium" | "Low">("All");
   const [loading, setLoading] = useState(true);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [greeting] = useState(() => timeGreeting());
@@ -243,10 +250,12 @@ export default function DashboardPage() {
   }, [initialLoadComplete, loading, reduceMotion, documents.length]);
 
   const filteredDocuments = useMemo(() => {
-    return documents.filter((doc) =>
-      doc.name.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-  }, [documents, searchQuery]);
+    return documents.filter((doc) => {
+      const matchesSearch = doc.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesFilter = riskFilter === "All" || doc.risk_level === riskFilter;
+      return matchesSearch && matchesFilter;
+    });
+  }, [documents, searchQuery, riskFilter]);
 
   const recentDocuments = useMemo(
     () => filteredDocuments.slice(0, 5),
@@ -284,7 +293,7 @@ export default function DashboardPage() {
         style={{ backgroundColor: le.background }}
       >
         <Sidebar />
-        <div className="flex-1 ml-20 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center w-full max-w-full overflow-x-hidden">
           <motion.div
             className="text-center"
             initial={reduceMotion ? false : { opacity: 0 }}
@@ -314,7 +323,7 @@ export default function DashboardPage() {
     >
       <Sidebar />
 
-      <div className="flex-1 ml-20">
+      <div className="flex-1 overflow-x-hidden w-full max-w-full">
         <motion.div
           className="container mx-auto px-6 sm:px-8 py-10 lg:py-12"
           initial={reduceMotion ? false : { opacity: 0, y: 20 }}
@@ -365,22 +374,36 @@ export default function DashboardPage() {
                     </Link>
                   </Button>
                 </motion.div>
-                <motion.div
-                  whileHover={
-                    reduceMotion ? undefined : { scale: 1.02, y: -2 }
-                  }
-                  whileTap={reduceMotion ? undefined : { scale: 0.98 }}
-                  transition={springSnappy}
-                >
-                  <Button
-                    variant="outline"
-                    className="font-semibold rounded-[8px] border-slate-200 bg-white"
-                    style={{ color: le.primary }}
-                  >
-                    <Filter className="w-4 h-4 mr-2" />
-                    Filter
-                  </Button>
-                </motion.div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <motion.div
+                      whileHover={
+                        reduceMotion ? undefined : { scale: 1.02, y: -2 }
+                      }
+                      whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+                      transition={springSnappy}
+                    >
+                      <Button
+                        variant={riskFilter !== "All" ? "default" : "outline"}
+                        className="font-semibold rounded-[8px] border-slate-200"
+                        style={
+                          riskFilter !== "All"
+                            ? { backgroundColor: le.primary, color: "#fff" }
+                            : { color: le.primary, backgroundColor: "white" }
+                        }
+                      >
+                        <Filter className="w-4 h-4 mr-2" />
+                        {riskFilter === "All" ? "Filter" : riskFilter}
+                      </Button>
+                    </motion.div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40 rounded-xl">
+                    <DropdownMenuItem onClick={() => setRiskFilter("All")} className="cursor-pointer">All Risks</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setRiskFilter("High")} className="cursor-pointer">High Risk</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setRiskFilter("Medium")} className="cursor-pointer">Medium Risk</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setRiskFilter("Low")} className="cursor-pointer">Low Risk</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <div className="flex items-center gap-1 p-1 rounded-[8px] bg-white border border-slate-200 shadow-sm">
                   <motion.div
                     whileTap={reduceMotion ? undefined : { scale: 0.96 }}

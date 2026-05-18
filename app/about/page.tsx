@@ -106,9 +106,9 @@ export default function AboutPage() {
           </h2>
           <div className="mx-auto grid max-w-4xl grid-cols-1 gap-12 md:grid-cols-3">
             {[
-              { name: "Sarah Jennings", role: "CEO & Co-Founder", bio: "Former Big Law partner, M&A.", },
-              { name: "David Chen", role: "CTO & Co-Founder", bio: "NLP and retrieval for legal text.", },
-              { name: "Elena Rodriguez", role: "Head of Product", bio: "Complex tools, simple surfaces.", },
+              { name: "Huzaifa", role: "CTO & Co-Founder", bio: "NLP and retrieval for legal text.", },
+              { name: "Minhaj", role: "CEO", bio: "Visionary leader driving LegalEagle.", },
+              { name: "Ahad", role: "Head of Product", bio: "Complex tools, simple surfaces.", },
             ].map((m) => (
               <div key={m.name} data-animate-team className="group cursor-pointer">
                 <div

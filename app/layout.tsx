@@ -35,6 +35,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${playfairDisplay.variable} antialiased`}
+        suppressHydrationWarning
       >
         <AuthProvider>
           <Navbar />

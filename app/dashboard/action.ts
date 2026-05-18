@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { OpenAIEmbeddings } from "@langchain/openai";
+import { hasOpenAIKey, getOpenAIApiKey } from "@/lib/env";
 import { generateDocumentRisks } from "@/app/analyze/actions";
 
 async function extractTextFromPdf(arrayBuffer: ArrayBuffer): Promise<string> {
@@ -102,10 +103,10 @@ export async function processDocument(formData: FormData) {
     const chunks = await splitter.createDocuments([rawText]);
 
     // 6) LangChain embeddings step (OpenAI): vectorize each chunk.
-    const canUseEmbeddings = Boolean(process.env.OPENAI_API_KEY);
+    const canUseEmbeddings = hasOpenAIKey();
     const embeddings = canUseEmbeddings
       ? new OpenAIEmbeddings({
-          openAIApiKey: process.env.OPENAI_API_KEY,
+          openAIApiKey: getOpenAIApiKey(),
           modelName: "text-embedding-3-small",
         })
       : null;

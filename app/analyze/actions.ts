@@ -4,6 +4,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { createClient } from "@/utils/supabase/server";
 import { OpenAIEmbeddings } from "@langchain/openai";
+import { hasOpenAIKey, getOpenAIApiKey } from "@/lib/env";
 import {
   answerQuestionWithContext,
   generateRisksFromDocument,
@@ -172,11 +173,11 @@ export async function askDocumentQuestion(params: {
 
   if (docError || !doc) throw new Error("Document not found");
 
-  const canUseEmbeddings = Boolean(process.env.OPENAI_API_KEY);
+  const canUseEmbeddings = hasOpenAIKey();
   let documentText = "";
   if (canUseEmbeddings) {
     const embeddings = new OpenAIEmbeddings({
-      openAIApiKey: process.env.OPENAI_API_KEY,
+      openAIApiKey: getOpenAIApiKey(),
       modelName: "text-embedding-3-small",
     });
     

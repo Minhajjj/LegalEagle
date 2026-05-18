@@ -74,7 +74,7 @@ export default function TemplateBuilderPage({
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 md:ml-20 flex flex-col h-screen print:h-auto print:ml-0">
+      <div className="flex-1 flex w-full max-w-full overflow-x-hidden flex-col h-screen print:h-auto print:ml-0">
         
         {/* Header - Hidden on Print */}
         <header className="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between shrink-0 print:hidden z-10 sticky top-0">

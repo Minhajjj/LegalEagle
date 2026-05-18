@@ -58,7 +58,7 @@ export default function ComparePage() {
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: le.background }}>
       <Sidebar />
-      <div className="flex-1 ml-20">
+      <div className="flex-1 overflow-x-hidden w-full max-w-full">
         <div className="container mx-auto px-6 sm:px-8 py-10 max-w-6xl">
           <motion.div
             initial={reduceMotion ? false : { opacity: 0, y: 20 }}

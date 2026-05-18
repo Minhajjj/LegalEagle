@@ -222,7 +222,7 @@ export default function AnalyzeLandingPage() {
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: le.background }}>
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <main className="flex-1 ml-20 p-6 sm:p-8 overflow-y-auto">
+        <main className="flex-1 w-full max-w-full overflow-x-hidden p-6 sm:p-8 overflow-y-auto">
           <div className="max-w-5xl mx-auto">
             <div data-analyze-hero className="mb-10">
               <h1 className="text-3xl sm:text-[36px] font-bold mb-2" style={{ color: le.primary }}>

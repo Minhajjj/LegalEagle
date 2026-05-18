@@ -1,7 +1,33 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { validateEnv, getSupabaseUrl, getSupabaseAnonKey } from "@/lib/env";
 
 export async function middleware(request: NextRequest) {
+  // ── Env-var health check ─────────────────────────────────────────
+  // If required vars are missing, return a clear error page instead
+  // of crashing the entire app with an opaque 500.
+  const envCheck = validateEnv();
+  if (!envCheck.ok) {
+    const message =
+      `Missing environment variable(s): ${envCheck.missing.join(", ")}. ` +
+      `Set them in .env.local (local dev) or Vercel project settings (production).`;
+    console.error(`[LegalEagle] ${message}`);
+
+    return new NextResponse(
+      `<!DOCTYPE html>
+<html><head><title>Configuration Error</title></head>
+<body style="font-family:system-ui;padding:3rem;max-width:640px;margin:auto">
+  <h1 style="color:#dc2626">⚠ Environment Configuration Error</h1>
+  <p>${message}</p>
+  <p>See <a href="https://supabase.com/dashboard/project/_/settings/api">Supabase API Settings</a>.</p>
+</body></html>`,
+      {
+        status: 500,
+        headers: { "content-type": "text/html; charset=utf-8" },
+      },
+    );
+  }
+
   // Create a response object
   let response = NextResponse.next({
     request: {
@@ -10,8 +36,8 @@ export async function middleware(request: NextRequest) {
   });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    getSupabaseUrl(),
+    getSupabaseAnonKey(),
     {
       cookies: {
         getAll() {

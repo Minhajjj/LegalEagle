@@ -66,7 +66,7 @@ export default function TemplatesPage() {
       <div className="flex">
         <Sidebar />
 
-        <div className="flex-1 ml-20">
+        <div className="flex-1 w-full max-w-full overflow-x-hidden">
           <div className="container mx-auto px-8 py-12">
             <div ref={headerRef} className="mb-8 space-y-4">
               <h1 className="text-4xl font-bold tracking-tight" style={{ color: le.text }}>

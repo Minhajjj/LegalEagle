@@ -8,7 +8,7 @@ import { createClient } from "@/utils/supabase/client";
 import { signup } from "@/app/auth/actions";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { Scale } from "lucide-react";
+import { Scale, Eye, EyeOff } from "lucide-react";
 
 function AuthPageContent() {
   const router = useRouter();
@@ -27,6 +27,8 @@ function AuthPageContent() {
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
 
   useEffect(() => {
     const mode = searchParams.get("mode");
@@ -140,13 +142,23 @@ function AuthPageContent() {
                   required disabled={loading}
                   className="h-12 bg-gray-50 border-gray-200"
                 />
-                <Input
-                  type="password" placeholder="Password"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  required disabled={loading}
-                  className="h-12 bg-gray-50 border-gray-200"
-                />
+                <div className="relative">
+                  <Input
+                    type={showLoginPassword ? "text" : "password"} placeholder="Password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    required disabled={loading}
+                    className="h-12 bg-gray-50 border-gray-200 pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                    aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                  >
+                    {showLoginPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
                 <div className="flex justify-end">
                   <Link href="/forgot-password" className="text-sm font-medium text-[#2563eb] hover:underline">
                     Forgot password?
@@ -200,20 +212,32 @@ function AuthPageContent() {
                   required disabled={loading}
                   className="h-12 bg-gray-50 border-gray-200"
                 />
-                <Input
-                  type="password" placeholder="Password"
-                  value={signupPassword}
-                  onChange={(e) => setSignupPassword(e.target.value)}
-                  required disabled={loading}
-                  className="h-12 bg-gray-50 border-gray-200"
-                />
-                <Input
-                  type="password" placeholder="Confirm Password"
-                  value={signupConfirmPassword}
-                  onChange={(e) => setSignupConfirmPassword(e.target.value)}
-                  required disabled={loading}
-                  className="h-12 bg-gray-50 border-gray-200"
-                />
+                <div className="relative">
+                  <Input
+                    type={showSignupPassword ? "text" : "password"} placeholder="Password"
+                    value={signupPassword}
+                    onChange={(e) => setSignupPassword(e.target.value)}
+                    required disabled={loading}
+                    className="h-12 bg-gray-50 border-gray-200 pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSignupPassword(!showSignupPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                    aria-label={showSignupPassword ? "Hide password" : "Show password"}
+                  >
+                    {showSignupPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                <div className="relative">
+                  <Input
+                    type={showSignupPassword ? "text" : "password"} placeholder="Confirm Password"
+                    value={signupConfirmPassword}
+                    onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                    required disabled={loading}
+                    className="h-12 bg-gray-50 border-gray-200 pr-10"
+                  />
+                </div>
                 <Button type="submit" disabled={loading} className="w-full h-12 text-md font-semibold bg-[#2563eb] hover:bg-[#1d4ed8] mt-2">
                   {loading ? "Creating..." : "Sign Up"}
                 </Button>

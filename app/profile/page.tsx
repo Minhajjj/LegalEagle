@@ -84,7 +84,7 @@ export default function ProfilePage() {
   return (
     <div className="flex min-h-screen" style={{ backgroundColor: le.background }}>
       <Sidebar />
-      <div className="flex-1 ml-20">
+      <div className="flex-1 w-full max-w-full overflow-x-hidden">
         <div className="container mx-auto max-w-3xl px-6 py-10 lg:py-14">
           <motion.div
             initial={reduceMotion ? false : { opacity: 0, y: 16 }}

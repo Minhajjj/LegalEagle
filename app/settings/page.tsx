@@ -124,7 +124,7 @@ export default function SettingsPage() {
     <div className="min-h-screen" style={{ backgroundColor: le.background }}>
       <div className="flex">
         <Sidebar />
-        <div className="flex-1 ml-20">
+        <div className="flex-1 w-full max-w-full overflow-x-hidden">
           <motion.div
             className="container mx-auto px-6 sm:px-8 py-10 max-w-4xl"
             initial={reduceMotion ? false : { opacity: 0, y: 20 }}

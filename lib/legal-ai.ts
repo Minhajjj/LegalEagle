@@ -1,4 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
+import { hasOpenAIKey, getOpenAIApiKey } from "@/lib/env";
 
 export type RiskSeverity = "High" | "Medium" | "Low";
 
@@ -20,10 +21,9 @@ interface BenchmarkClause {
   notes?: string;
 }
 
-const hasOpenAIKey = Boolean(process.env.OPENAI_API_KEY);
-const model = hasOpenAIKey
+const model = hasOpenAIKey()
   ? new ChatOpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: getOpenAIApiKey(),
       model: "gpt-3.5-turbo",
       temperature: 0.2,
     })
@@ -248,9 +248,9 @@ function generateFallbackAnswer(params: {
 
   const topRisk = params.risks[0];
   if (bestParagraph) {
-    return `Free-mode answer: Based on matching contract text, this appears relevant: "${bestParagraph.slice(0, 420)}${bestParagraph.length > 420 ? "..." : ""}". ${topRisk ? `Top related risk currently flagged is "${topRisk.clause_name}" (${topRisk.severity}).` : ""} For final legal interpretation, consult a lawyer.`;
+    return `Based on matching contract text, this appears relevant: "${bestParagraph.slice(0, 420)}${bestParagraph.length > 420 ? "..." : ""}". ${topRisk ? `Top related risk currently flagged is "${topRisk.clause_name}" (${topRisk.severity}).` : ""} For final legal interpretation, consult a lawyer.`;
   }
-  return "Free-mode answer: I could not find a strong text match for this question in the stored document excerpts. Please try a more specific clause question (for example: termination, liability, indemnity).";
+  return "I could not find a strong text match for this question in the stored document excerpts. Please try a more specific clause question (for example: termination, liability, indemnity).";
 }
 
 export async function answerQuestionWithContext(params: {
@@ -273,10 +273,15 @@ export async function answerQuestionWithContext(params: {
           )
           .join("\n");
 
-  const prompt = `You are LegalEagle's assistant.
-Answer the user question using only the provided document context and detected risks.
-If the answer is uncertain, say so clearly.
-Keep the answer concise (3-6 sentences), practical, and non-definitive legal advice.
+  const prompt = `You are LegalEagle's AI assistant, specialized in legal document analysis.
+Your primary directive is to answer questions strictly based on the provided document context and detected risks.
+
+CRITICAL RULES:
+1. Do NOT answer general knowledge questions, hypothetical questions, or anything unrelated to the provided document text or legal risk analysis.
+2. If the user asks a question that cannot be answered using the provided document context or risks, you must politely decline and state that you can only answer questions related to the uploaded document.
+3. If the answer is uncertain based on the text, say so clearly. Do not invent or hallucinate information.
+4. Structure your answer to be highly readable: use a mix of a brief description followed by 2-3 bullet points. Do not output a giant wall of text.
+5. Provide practical but non-definitive legal advice.
 
 Document Name: ${params.documentName}
 Detected Risks:

@@ -152,10 +152,8 @@ export function Navbar() {
       // Use the server action to ensure cookies are cleared properly.
       await serverSignOut().catch(console.error);
     } finally {
-      // Navigate and refresh to clear layout cache, regardless of API success
-      router.push("/");
-      router.refresh();
-      setIsSigningOut(false);
+      // Force a hard refresh to the homepage to guarantee all client context and Next.js router cache is fully purged
+      window.location.href = "/";
     }
   };
 
@@ -230,25 +228,6 @@ export function Navbar() {
                     className="h-9 w-48 rounded-full border-slate-400/60 bg-white pl-9 text-sm placeholder:text-slate-400 xl:w-56"
                   />
                 </div>
-              )}
-
-              {user && (
-                <motion.div
-                  whileHover={reduceMotion ? undefined : { scale: 1.06 }}
-                  whileTap={reduceMotion ? undefined : { scale: 0.95 }}
-                >
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="relative hidden h-9 w-9 rounded-full border border-transparent text-slate-700 hover:border-slate-300/80 hover:bg-white/90 sm:flex"
-                  >
-                    <Bell className="h-[18px] w-[18px]" />
-                    <span
-                      className="absolute right-1 top-1 h-2 w-2 rounded-full ring-2 ring-[#dbe6f3]"
-                      style={{ backgroundColor: le.warning }}
-                    />
-                  </Button>
-                </motion.div>
               )}
 
               {!user && (
@@ -428,7 +407,7 @@ export function Navbar() {
               onClick={() => setMobileOpen(false)}
             />
             <motion.aside
-              className="absolute bottom-0 left-0 top-0 flex w-[min(92vw,320px)] flex-col bg-[#edf2fa] shadow-2xl ring-1 ring-[#b8c9dc]"
+              className="absolute bottom-0 left-0 top-0 flex w-[min(92vw,320px)] flex-col bg-[#edf2fa] pt-[84px] shadow-2xl ring-1 ring-[#b8c9dc]"
               initial={reduceMotion ? undefined : { x: "-100%" }}
               animate={{ x: 0 }}
               exit={reduceMotion ? undefined : { x: "-100%" }}
