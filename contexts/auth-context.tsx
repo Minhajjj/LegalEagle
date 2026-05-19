@@ -1,7 +1,7 @@
 // contexts/auth-context.tsx
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { User } from "@supabase/supabase-js";
 
@@ -23,11 +23,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const profileUserIdRef = useRef<string | null>(null);
 
   const fetchProfile = async (userId: string) => {
     try {
       const supabase = createClient();
-      // DB read: pulls the signed-in user's row from `profiles`.
       const { data } = await supabase
         .from("profiles")
         .select("*")
@@ -42,47 +42,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const supabase = createClient();
 
-    // Get initial user — always resolve loading even on error
-    supabase.auth
-      .getUser()
-      .then(({ data: { user }, error }) => {
-        if (error) {
-          console.error("Auth getUser error:", error.message);
-          setUser(null);
-          setProfile(null);
-        } else {
-          setUser(user);
-          if (user) {
-            fetchProfile(user.id);
-          }
-        }
-      })
-      .catch((err) => {
-        console.error("Auth getUser failed:", err);
-        setUser(null);
-        setProfile(null);
-      })
-      .finally(() => {
-        setLoading(false);
+    const syncSession = async (nextUser: User | null) => {
+      const nextId = nextUser?.id ?? null;
+
+      setUser((prev) => {
+        if (!nextUser) return null;
+        if (prev?.id === nextUser.id) return prev;
+        return nextUser;
       });
 
-    // Listen for changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      try {
-        setUser(session?.user || null);
-        if (session?.user) {
-          await fetchProfile(session.user.id);
+      if (nextId !== profileUserIdRef.current) {
+        profileUserIdRef.current = nextId;
+        if (nextId) {
+          await fetchProfile(nextId);
         } else {
           setProfile(null);
         }
+      }
+    };
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      try {
+        await syncSession(session?.user ?? null);
       } catch (err) {
         console.error("Auth state change error:", err);
       } finally {
         setLoading(false);
       }
     });
+
+    supabase.auth
+      .getSession()
+      .then(({ data: { session }, error }) => {
+        if (error) {
+          console.error("Auth getSession error:", error.message);
+          return syncSession(null);
+        }
+        return syncSession(session?.user ?? null);
+      })
+      .catch((err) => {
+        console.error("Auth getSession failed:", err);
+        return syncSession(null);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
 
     return () => subscription.unsubscribe();
   }, []);
@@ -93,7 +99,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         profile,
         loading,
-        refreshProfile: () => fetchProfile(user?.id || ""),
+        refreshProfile: () =>
+          user?.id ? fetchProfile(user.id) : Promise.resolve(),
       }}
     >
       {children}

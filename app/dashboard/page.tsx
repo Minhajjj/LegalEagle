@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
 import { Sidebar } from "@/components/sidebar";
 import { DocumentCard } from "@/components/document-card";
@@ -56,6 +56,7 @@ function timeGreeting(): string {
 export default function DashboardPage() {
   const reduceMotion = useAppReducedMotion();
   const { user: authUser, loading: authLoading } = useAuth();
+  const userId = authUser?.id;
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -63,6 +64,7 @@ export default function DashboardPage() {
   const [riskFilter, setRiskFilter] = useState<"All" | "High" | "Medium" | "Low">("All");
   const [loading, setLoading] = useState(true);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const hasFetchedRef = useRef(false);
   const [greeting] = useState(() => timeGreeting());
 
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
@@ -76,11 +78,9 @@ export default function DashboardPage() {
 
   // Wait for auth context to resolve, then fetch documents
   useEffect(() => {
-    // Don't do anything while auth is still loading
     if (authLoading) return;
 
-    // If auth resolved with no user, redirect to login
-    if (!authUser) {
+    if (!userId) {
       setLoading(false);
       setInitialLoadComplete(true);
       router.push("/login");
@@ -91,14 +91,14 @@ export default function DashboardPage() {
 
     const fetchDocuments = async () => {
       try {
-        setLoading(true);
-
-        const user = authUser;
+        if (!hasFetchedRef.current) {
+          setLoading(true);
+        }
 
         const { data, error } = await supabase
           .from("documents")
           .select("*")
-          .eq("user_id", user.id)
+          .eq("user_id", userId)
           .order("created_at", { ascending: false });
 
         if (error) throw error;
@@ -106,7 +106,7 @@ export default function DashboardPage() {
         const { data: riskRows, error: riskError } = await supabase
           .from("document_risks")
           .select("document_id, severity")
-          .eq("user_id", user.id);
+          .eq("user_id", userId);
 
         if (riskError) throw riskError;
 
@@ -167,12 +167,14 @@ export default function DashboardPage() {
 
           setDocuments(docsWithRisk);
           setRiskTotals(totals);
+          hasFetchedRef.current = true;
           setInitialLoadComplete(true);
           setLoading(false);
         }
       } catch (error) {
         console.error("Dashboard Error:", error);
         if (isMounted) {
+          hasFetchedRef.current = true;
           setLoading(false);
           setInitialLoadComplete(true);
         }
@@ -184,8 +186,7 @@ export default function DashboardPage() {
     return () => {
       isMounted = false;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authUser, authLoading]);
+  }, [userId, authLoading, router, supabase]);
 
   const handleRename = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,8 @@ interface RecentDocument {
 export default function AnalyzeLandingPage() {
   const reduceMotion = useAppReducedMotion();
   const { user: authUser, loading: authLoading } = useAuth();
+  const userId = authUser?.id;
+  const hasFetchedRef = useRef(false);
   const [isDragging, setIsDragging] = useState(false);
   const [recentDocs, setRecentDocs] = useState<RecentDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,14 +52,63 @@ export default function AnalyzeLandingPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!authUser) {
+    if (!userId) {
       setLoading(false);
       router.push("/login");
       return;
     }
-    fetchRecentDocuments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authUser, authLoading]);
+
+    let isMounted = true;
+
+    const load = async () => {
+      if (!hasFetchedRef.current) setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("documents")
+          .select("id, name, created_at, status")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(5);
+
+        if (error) throw error;
+        const docIds = (data || []).map((doc) => doc.id);
+        let riskCountByDocument: Record<string, number> = {};
+        if (docIds.length > 0) {
+          const { data: riskRows, error: riskError } = await supabase
+            .from("document_risks")
+            .select("document_id")
+            .in("document_id", docIds);
+          if (riskError) throw riskError;
+          riskCountByDocument = (riskRows || []).reduce(
+            (acc, row) => {
+              acc[row.document_id] = (acc[row.document_id] || 0) + 1;
+              return acc;
+            },
+            {} as Record<string, number>,
+          );
+        }
+
+        if (!isMounted) return;
+
+        const docsWithRisks = (data || []).map((doc: RecentDocument & { id: string }) => ({
+          ...doc,
+          risk_count: riskCountByDocument[doc.id] || 0,
+        }));
+
+        setRecentDocs(docsWithRisks);
+        hasFetchedRef.current = true;
+      } catch (err) {
+        console.error("Error fetching documents:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    load();
+    return () => {
+      isMounted = false;
+    };
+  }, [userId, authLoading, router, supabase]);
 
   useEffect(() => {
     if (reduceMotion) return;
@@ -83,53 +134,6 @@ export default function AnalyzeLandingPage() {
     });
     return () => ctx.revert();
   }, [reduceMotion]);
-
-  const fetchRecentDocuments = async () => {
-    setLoading(true);
-    try {
-      const user = authUser;
-      if (!user) {
-        router.push("/login");
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("documents")
-        .select("id, name, created_at, status")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(5);
-
-      if (error) throw error;
-      const docIds = (data || []).map((doc) => doc.id);
-      let riskCountByDocument: Record<string, number> = {};
-      if (docIds.length > 0) {
-        const { data: riskRows, error: riskError } = await supabase
-          .from("document_risks")
-          .select("document_id")
-          .in("document_id", docIds);
-        if (riskError) throw riskError;
-        riskCountByDocument = (riskRows || []).reduce(
-          (acc, row) => {
-            acc[row.document_id] = (acc[row.document_id] || 0) + 1;
-            return acc;
-          },
-          {} as Record<string, number>,
-        );
-      }
-
-      const docsWithRisks = (data || []).map((doc: RecentDocument & { id: string }) => ({
-        ...doc,
-        risk_count: riskCountByDocument[doc.id] || 0,
-      }));
-
-      setRecentDocs(docsWithRisks);
-    } catch (err) {
-      console.error("Error fetching documents:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleFileSelect = (file: File) => {
     if (file.type !== "application/pdf") {

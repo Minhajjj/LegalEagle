@@ -145,21 +145,13 @@ export function Navbar() {
   const handleLogout = async () => {
     setIsSigningOut(true);
     try {
-      // Clear client-side session state (ignore errors if session is already invalid)
       const supabase = createClient();
       await supabase.auth.signOut().catch(console.error);
-
-      // Use the server action to ensure cookies are cleared properly.
-      // Note: the server action calls redirect() which throws a special
-      // NEXT_REDIRECT error — catch it so the finally block always runs.
-      try {
-        await serverSignOut();
-      } catch {
-        // Expected: Next.js redirect() throws internally
-      }
-    } finally {
-      // Force a hard refresh to the homepage to guarantee all client context and Next.js router cache is fully purged
-      window.location.href = "/";
+      await serverSignOut();
+    } catch {
+      // serverSignOut() uses redirect() which throws NEXT_REDIRECT on success
+      router.refresh();
+      window.location.href = "/login";
     }
   };
 
