@@ -150,7 +150,13 @@ export function Navbar() {
       await supabase.auth.signOut().catch(console.error);
 
       // Use the server action to ensure cookies are cleared properly.
-      await serverSignOut().catch(console.error);
+      // Note: the server action calls redirect() which throws a special
+      // NEXT_REDIRECT error — catch it so the finally block always runs.
+      try {
+        await serverSignOut();
+      } catch {
+        // Expected: Next.js redirect() throws internally
+      }
     } finally {
       // Force a hard refresh to the homepage to guarantee all client context and Next.js router cache is fully purged
       window.location.href = "/";

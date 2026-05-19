@@ -44,15 +44,19 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
+          cookiesToSet.forEach(({ name, value }) => {
             request.cookies.set(name, value);
-            response.cookies.set(name, value, options);
           });
-          // Update response with new request containing updated cookies
+          // Rebuild the response so it carries the updated request cookies
           response = NextResponse.next({
             request: {
               headers: request.headers,
             },
+          });
+          // Re-apply every cookie to the *new* response so the browser
+          // actually receives the refreshed auth tokens.
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
           });
         },
       },

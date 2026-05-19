@@ -33,6 +33,7 @@ import { renameDocument, deleteDocument } from "./action";
 import { AnimatedCounter } from "@/components/animated-counter";
 import { le } from "@/lib/design-system";
 import { springSnappy, useAppReducedMotion } from "@/lib/motion-utils";
+import { useAuth } from "@/contexts/auth-context";
 
 interface Document {
   id: string;
@@ -54,6 +55,7 @@ function timeGreeting(): string {
 
 export default function DashboardPage() {
   const reduceMotion = useAppReducedMotion();
+  const { user: authUser, loading: authLoading } = useAuth();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -72,22 +74,26 @@ export default function DashboardPage() {
   const supabase = createClient();
   const router = useRouter();
 
+  // Wait for auth context to resolve, then fetch documents
   useEffect(() => {
+    // Don't do anything while auth is still loading
+    if (authLoading) return;
+
+    // If auth resolved with no user, redirect to login
+    if (!authUser) {
+      setLoading(false);
+      setInitialLoadComplete(true);
+      router.push("/login");
+      return;
+    }
+
     let isMounted = true;
 
     const fetchDocuments = async () => {
       try {
         setLoading(true);
 
-        const {
-          data: { user },
-          error: authError,
-        } = await supabase.auth.getUser();
-
-        if (authError || !user) {
-          router.push("/login");
-          return;
-        }
+        const user = authUser;
 
         const { data, error } = await supabase
           .from("documents")
@@ -178,7 +184,8 @@ export default function DashboardPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authUser, authLoading]);
 
   const handleRename = async (e: React.FormEvent) => {
     e.preventDefault();

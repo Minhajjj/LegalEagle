@@ -23,6 +23,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import { le } from "@/lib/design-system";
 import { springSnappy, useAppReducedMotion } from "@/lib/motion-utils";
+import { useAuth } from "@/contexts/auth-context";
 
 interface RecentDocument {
   id: string;
@@ -34,6 +35,7 @@ interface RecentDocument {
 
 export default function AnalyzeLandingPage() {
   const reduceMotion = useAppReducedMotion();
+  const { user: authUser, loading: authLoading } = useAuth();
   const [isDragging, setIsDragging] = useState(false);
   const [recentDocs, setRecentDocs] = useState<RecentDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,8 +49,15 @@ export default function AnalyzeLandingPage() {
   const router = useRouter();
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!authUser) {
+      setLoading(false);
+      router.push("/login");
+      return;
+    }
     fetchRecentDocuments();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authUser, authLoading]);
 
   useEffect(() => {
     if (reduceMotion) return;
@@ -78,9 +87,7 @@ export default function AnalyzeLandingPage() {
   const fetchRecentDocuments = async () => {
     setLoading(true);
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = authUser;
       if (!user) {
         router.push("/login");
         return;
